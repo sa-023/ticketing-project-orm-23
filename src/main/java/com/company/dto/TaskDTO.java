@@ -1,8 +1,9 @@
 package com.company.dto;
 import com.company.enums.Status;
+import com.sun.istack.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -10,11 +11,20 @@ import java.util.UUID;
 @Data
 public class TaskDTO {
 
-    private Long id; // Primary key will be created by Postgres and will be assigned to id when we work with database. So, we don't need a @AllArgsConstructor.
+    private Long id;
+
+   @NotNull
     private ProjectDTO project;
+
+    @NotNull
     private UserDTO assignedEmployee;
+
+    @NotBlank
     private String taskSubject;
+
+    @NotBlank
     private String taskDetail;
+
     private Status taskStatus;
     private LocalDate assignedDate;
 
@@ -32,7 +42,7 @@ public class TaskDTO {
          *   there will be no unique ID. So, it can cause the error of deleting or updating the task.
          *   Because of that, we create our constructor manually. We don't pass an ID in the constructor parameter.
          *   To populate unique IDs automatically, we assign UUID to the current ID instance of the method.
-         * · Later on, when we work with the database, a unique ID (Primary key) will be created and assigned to the task automatically by Postgres.
+         * · Normally a unique ID (Primary key) will be created and assigned to the task automatically by Postgres.
          */
     }
 

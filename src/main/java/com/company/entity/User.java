@@ -1,41 +1,37 @@
 package com.company.entity;
-
 import com.company.enums.Gender;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-
+import org.hibernate.annotations.Where;
+import javax.persistence.*;
+/*
+ * 🦋 @Where(clause = "is_deleted=false")
+ * · Whatever repository is created from an entity that is annotated with @Where(clause = "is_deleted=false"), all the
+ *   queries in that repository will automatically be concatenated with "is_deleted=false" as well.
+ * · The User entity class is annotated with @Where(clause = "is_deleted=false"), and UserRepository accepts User entity.
+ *   Ex: How the query will run in the background: SELECT * FROM TableName WHERE is_deleted = false
+ *                                                 SELECT * FROM users WHERE is_deleted = false;
+ *                                                 SELECT user_name FROM users WHERE is_deleted = false;
+ */
 @NoArgsConstructor
 @Data
-public class User extends BaseEntity{
+@Entity
+@Table(name = "users")
+@Where(clause = "is_deleted=false")
+public class User extends BaseEntity {
 
     private String firstName;
     private String lastName;
+    @Column(unique = true, nullable = false)
     private String userName;
-    private String password;
+    private String passWord;
     private boolean enabled;
     private String phone;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
     private Role role;
+    @Enumerated(EnumType.STRING)
     private Gender gender;
-
-
-    /*
-     *❗We have to add All Arg Constructor to the child's class manually because when the class extends from another class
-     *  the Lombok @AllArgsConstructor annotation does not include parent (super) class fields in the child's constructor.
-     */
-    public User(Long id, LocalDateTime insertDateTime, Long insertUserId, LocalDateTime lastUpdateDateTime, Long lastUpdateUserId, String firstName, String lastName, String userName, String password, boolean enabled, String phone, Role role, Gender gender) {
-        super(id, insertDateTime, insertUserId, lastUpdateDateTime, lastUpdateUserId);
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.userName = userName;
-        this.password = password;
-        this.enabled = enabled;
-        this.phone = phone;
-        this.role = role;
-        this.gender = gender;
-    }
-
 
 
 }

@@ -1,19 +1,16 @@
 package com.company.service;
-
 import com.company.dto.UserDTO;
-
 import java.util.List;
 
-public interface UserService extends CrudService <UserDTO,String> {
+public interface UserService {
 
-//    UserDTO save(UserDTO user);
-//    UserDTO findById(String username);
-//    List<UserDTO> findAll();
-//    void delete(UserDTO user);
-//    void deleteById(String username);
-
-    List<UserDTO> findManagers();
-    List<UserDTO> findEmployees();
+    List<UserDTO> listAllUsers();
+    UserDTO findByUserName(String username);
+    void save(UserDTO dto);
+    UserDTO update(UserDTO dto);
+    void deleteByUserName(String username);
+    void delete(String userName);
+    List<UserDTO> listAllByRole(String role);
 
 
 

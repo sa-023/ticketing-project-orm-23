@@ -4,28 +4,15 @@ import com.company.service.RoleService;
 import com.company.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-/*
- * 🖍️...
- * · Entity engages with DB and DTO engages with UI.
- * · Entity and DTO separation happens because sometimes in a database we might have extra fields (ex: user id, lastUpdateDateTime etc...)
- *   that we don't want to display on the UI.
- * · We will use the mapper structure to map the entity to dto.
- *
- * · If data is persistent, then it's sustained even if the process, cluster, node, or container is changed or removed.
- * · If data is non-persistent, this means that it can be altered, removed, or lost if the process, cluster, node, or container is changed or removed.
- *
- * · We can use the @Service annotation for service.impls classes instead of @Component.
- *
- */
+import javax.validation.Valid;
 
 @Controller
 @RequestMapping("/user")
 public class UserController {
-
-    RoleService roleService;
-    UserService userService;
+    private final RoleService roleService;
+    private final UserService userService;
     public UserController(RoleService roleService, UserService userService) {
         this.roleService = roleService;
         this.userService = userService;
@@ -33,58 +20,65 @@ public class UserController {
 
 
     @GetMapping("/create")
-    public String createUser(Model model){
-        model.addAttribute("user", new UserDTO()); // Empty UserDTO object that we bind to the view to get input from the client.
-        model.addAttribute("roles", roleService.findAll()); // List of RoleDTOs to bind to the view for Role dropdown. (Comes from DB).
-        model.addAttribute("users", userService.findAll()); // List of Users to bind to the view for User List table. (Comes from DB).
+    public String createUser(Model model) {
+        model.addAttribute("user", new UserDTO());// Empty UserDTO object that we bind to the view to get input from the client.
+        model.addAttribute("roles", roleService.listAllRoles()); // List of RoleDTOs to bind to the view for Role dropdown. (Comes from DB).
+        model.addAttribute("users", userService.listAllUsers()); // List of Users to bind to the view for User List table. (Comes from DB).
         return "/user/create";
     }
 
     @PostMapping("/create")
-    public String insertUser(@ModelAttribute("user") UserDTO user, Model model){
+    public String insertUser(@Valid @ModelAttribute("user") UserDTO user, BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("roles", roleService.listAllRoles());
+            model.addAttribute("users", userService.listAllUsers());
+            return "/user/create";
+        }
+        userService.save(user);
+        return "redirect:/user/create";
         /*
          * 🖍️...
-         * · @ModelAttribute("user") UserDTO user: Returns values provided by the client in the createUser method.
+         * · @ModelAttribute("user") binds the value to the method argument that was exposed to the web view.
          * · return "/user/create"; Will return the view.
          * · return "redirect:/user/create"; Will return the @GetMapping("/user/create") endpoint.
+         *
+         * · @Valid: Triggers validation of nested objects or properties.
+         * · Validation errors are captured in a BindingResult object.
+         * · We are adding Model again after BindingResult in the method parameter because whenever we have an error, and we
+         *   redirect to the same page, we need to fill out the drop-downs again, even though we keep the object as it is.
          */
-
-//        model.addAttribute("user", new UserDTO());
-//        model.addAttribute("roles", roleService.findAll());
-//        userService.save(user);
-//        model.addAttribute("users", userService.findAll());
-//        return "/user/create";
-
-        userService.save(user); // Saving client-provided data.
-        return "redirect:/user/create";
-
     }
 
     @GetMapping("/update/{username}")
-    public String editUser(@PathVariable("username") String username, Model model){
+    public String editUser(@PathVariable("username") String username, Model model) {
+        model.addAttribute("user", userService.findByUserName(username));
+        model.addAttribute("roles", roleService.listAllRoles());
+        model.addAttribute("users", userService.listAllUsers());
+        return "/user/update";
+    }
+
+    @PostMapping("/update")
+    public String updateUser(@ModelAttribute("user") UserDTO user, BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("roles", roleService.listAllRoles());
+            model.addAttribute("users", userService.listAllUsers());
+            return "/user/update";
+        }
+        userService.update(user);
+        return "redirect:/user/create";
         /*
          * 🖍️...
          * · @GetMapping("/update/{username}"): Passing the path variable to the endpoint to retrieve a specific user when we click on the update button.
          * · @PathVariable("username"): We have to specify an end-point variable name inside the @PathVariable() annotation and pass it into the method parameter.
          */
-        model.addAttribute("user", userService.findById(username)); // It populates the fields on the form with user data when we click on the Update button.
-        model.addAttribute("roles", roleService.findAll());
-        model.addAttribute("users", userService.findAll());
-        return "/user/update";
-    }
-
-    @PostMapping("/update")
-    public String updateUser(@ModelAttribute("user") UserDTO user){
-        userService.update(user); // After clicking on the save button, it updates the user information.
-        return "redirect:/user/create"; // Redirect to the @GetMapping("/user/create") endpoint.
     }
 
     @GetMapping("/delete/{username}")
-    public String deleteUser(@PathVariable("username") String username){
-        userService.deleteById(username); // After clicking on the delete button, it deletes the user from the table.
-        return "redirect:/user/create"; // Redirect to the @GetMapping("/user/create") endpoint.
+    public String deleteUser(@PathVariable("username") String username) {
+//        userService.deleteByUserName(username);
+        userService.delete(username);
+        return "redirect:/user/create";
     }
-
 
 
 
